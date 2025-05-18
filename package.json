@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "seed": "ts-node src/seed/seed.ts ",
-    "seed-aduan": "ts-node src/seed/aduan.ts "
+    "seed-aduan": "ts-node src/seed/aduan.ts ",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
