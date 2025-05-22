@@ -33,7 +33,6 @@ export async function POST(request: Request) {
 
         // 4. Set cookie
         const cookieValue = serialize('userSession', String(JSON.stringify(userData)), {
-            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             maxAge: 60 * 60 * 24,
             path: '/',

@@ -1,6 +1,9 @@
+"use client"
 import * as React from "react"
-
+import { useRouter } from "next/navigation";
 import { SearchForm } from "@/components/search-form"
+import Cookies from 'js-cookie'
+
 import {
   Sidebar,
   SidebarContent,
@@ -32,13 +35,17 @@ const data = {
           url: "/data-center",
         },
         {
-          title: "user",
-          url: "/user",
+          title: "User",
+          url: "/User",
         },
 
         {
-          title: "auth",
+          title: "Auth",
           url: "/auth",
+        },
+        {
+          title: "Logout",
+          url: "#",
         },
       ],
     },
@@ -46,7 +53,17 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function  AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
+  const handleLogout = () => {
+    console.log("logout")
+    Cookies.remove('userSession')
+
+
+    router.push("/login")
+
+  }
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -54,6 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SearchForm />
       </SidebarHeader>
       <SidebarContent>
+        asdasdas
         {/* We create a SidebarGroup for each parent. */}
         {data.navMain.map((item) => (
           <SidebarGroup key={item.title}>
@@ -61,16 +79,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {item.items.map((item) => (
+                  item.title !=='logout' ?
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={item.isActive}>
                       <a href={item.url}>{item.title}</a>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  </SidebarMenuItem> : 
+                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={item.isActive}>
+                    <button className="text-left text-red-500 hover:text-red-500 hover:bg-red-100" onClick={handleLogout}>logout</button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+
+
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
