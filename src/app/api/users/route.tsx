@@ -28,10 +28,10 @@ export async function GET() {
 
     export async function POST(request: Request) {
     try {
-        const { nama, alamat, tempatLahir, tanggalLahir, username, password } = await request.json()
+        const { nama, alamat, tempatLahir, tanggalLahir } = await request.json()
 
         // Validate required fields
-        if (!nama || !username || !password) {
+        if (!nama ) {
         return NextResponse.json(
             { error: 'Nama, username, and password are required' },
             { status: 400 }
@@ -39,16 +39,7 @@ export async function GET() {
         }
 
         // Check if username exists
-        const existingUser = await prisma.login.findUnique({
-        where: { username }
-        })
-
-        if (existingUser) {
-        return NextResponse.json(
-            { error: 'Username already exists' },
-            { status: 400 }
-        )
-        }
+        
 
         // Create user with login (password stored in plaintext - NOT recommended for production)
         const newUser = await prisma.user.create({
@@ -57,12 +48,6 @@ export async function GET() {
             alamat,
             tempatLahir,
             tanggalLahir: new Date(tanggalLahir),
-            login: {
-            create: {
-                username,
-                password // Storing plaintext password - INSECURE
-            }
-            }
         },
         include: {
             login: {

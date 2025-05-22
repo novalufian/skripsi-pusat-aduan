@@ -39,13 +39,13 @@ import { CreateUserDialog } from '@/components/user/createUserDialog'
 import { EditUserDialog } from '@/components/user/editUserDialog'
 import { DeleteConfirmationDialog } from '@/components/user/deleteConfirmationDialog'
 
-    // types/user.ts
+// types/user.ts
 export type User = {
     id: number
     nama: string
-    email: string
-    createdAt: string
-    updatedAt: string
+    alamat: string
+    tempatLahir: string
+    tanggalLahir: string // This will store the date string from the input
 }
 
 export default function UserTable() {
@@ -89,22 +89,27 @@ export default function UserTable() {
             size: 200,
         },
         {
-            accessorKey: 'email',
-            header: 'Email',
+            accessorKey: 'alamat',
+            header: 'Alamat',
             cell: ({ row }) => (
-            <div className="lowercase w-[250px] truncate">{row.getValue('email')}</div>
+            <div className="lowercase w-[250px] truncate">{row.getValue('alamat')}</div>
+            ),
+            size: 250,
+        },{
+            accessorKey: 'tempatLahir',
+            header: 'Tempat Lahir',
+            cell: ({ row }) => (
+            <div className="lowercase w-[250px] truncate flex flex-col gap-1">{row.getValue('tempatLahir')} </div>
             ),
             size: 250,
         },
         {
-            accessorKey: 'createdAt',
-            header: 'Dibuat Pada',
+            accessorKey: 'tanggalLahir',
+            header: ' Tanggal Lahir',
             cell: ({ row }) => (
-            <div className="w-[180px]">
-                {new Date(row.getValue('createdAt')).toLocaleString()}
-            </div>
+            <div className="lowercase w-[250px] truncate flex flex-col gap-1">{convertDate(row.getValue('tanggalLahir'))}</div>
             ),
-            size: 180,
+            size: 250,
         },
         {
             id: 'actions',
@@ -130,11 +135,21 @@ export default function UserTable() {
         },
     ]
 
+    const convertDate = (isoDateString : string) => {
+        const date = new Date(isoDateString);
+        console.log(isoDateString, date)
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+        const year = String(date.getFullYear()); // Get last two digits of the year
+    return `${day}-${month}-${year}`;
+    };
+
     const refreshData = async () => {
         try {
         setLoading(true)
         const response = await fetch('/api/users')
         const result = await response.json()
+        console.log(result)
         setData(result)
         } catch (error) {
         console.error('Error fetching users:', error)

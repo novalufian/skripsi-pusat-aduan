@@ -11,8 +11,16 @@ const nextConfig: NextConfig = {
   },
   "include": ["src/**/*.ts"],
   "eslint": {
-         "ignoreDuringBuilds": true,
-       },
+    "ignoreDuringBuilds": true,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.pixabay.com',
+      },
+    ],
+  },
 
 }
 

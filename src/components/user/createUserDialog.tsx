@@ -1,33 +1,32 @@
-// components/users/CreateUserDialog.tsx
-'use client'
+    'use client'
 
-import { Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
+    import { Plus } from 'lucide-react'
+    import { Button } from '@/components/ui/button'
+    import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { useState } from 'react'
-import { toast } from 'sonner'
+    } from '@/components/ui/dialog'
+    import { Label } from '@/components/ui/label'
+    import { Input } from '@/components/ui/input'
+    import { useState } from 'react'
+    import { toast } from 'sonner'
 
-
-type CreateUserDialogProps = {
+    type CreateUserDialogProps = {
     onSuccess: () => void
     onCancel?: () => void
     children?: React.ReactNode
-}
+    }
 
-export function CreateUserDialog({ onSuccess, onCancel, children }: CreateUserDialogProps) {
+    export function CreateUserDialog({ onSuccess, onCancel, children }: CreateUserDialogProps) {
     const [open, setOpen] = useState(false)
     const [formData, setFormData] = useState({
         nama: '',
-        email: '',
-        password: '',
+        alamat: '',
+        tempatLahir: '',
+        tanggalLahir: '', // This will store the date string from the input
     })
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -42,20 +41,33 @@ export function CreateUserDialog({ onSuccess, onCancel, children }: CreateUserDi
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!formData.nama || !formData.email || !formData.password) {
-        toast.error('Nama, email, dan password harus diisi')
+        // Basic client-side validation
+        if (
+        !formData.nama ||
+        !formData.alamat ||
+        !formData.tempatLahir ||
+        !formData.tanggalLahir
+        ) {
+        toast.error('Semua bidang harus diisi, termasuk Nama, Email, Password, Alamat, Tempat Lahir, dan Tanggal Lahir.')
         return
         }
 
         setIsSubmitting(true)
 
         try {
+        // Prepare data for the API.
+        // Convert tanggalLahir to an ISO 8601 string, which DateTime expects.
+        const dataToSend = {
+            ...formData,
+            tanggalLahir: new Date(formData.tanggalLahir).toISOString(),
+        };
+
         const response = await fetch('/api/users', {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
             },
-            body: JSON.stringify(formData),
+            body: JSON.stringify(dataToSend),
         })
 
         if (response.ok) {
@@ -63,15 +75,16 @@ export function CreateUserDialog({ onSuccess, onCancel, children }: CreateUserDi
             setOpen(false)
             setFormData({
             nama: '',
-            email: '',
-            password: '',
+            alamat: '',
+            tempatLahir: '',
+            tanggalLahir: '',
             })
             onSuccess()
         } else {
             const errorData = await response.json()
             toast.error(errorData.error || 'Gagal menambahkan pengguna')
         }
-        } catch (error : unknown) {
+        } catch (error: unknown) {
         console.error('Error submitting form:', error)
         toast.error('Terjadi kesalahan')
         } finally {
@@ -80,10 +93,13 @@ export function CreateUserDialog({ onSuccess, onCancel, children }: CreateUserDi
     }
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen)
-        if (!isOpen) onCancel?.()
-        }}>
+        <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+            setOpen(isOpen)
+            if (!isOpen) onCancel?.()
+        }}
+        >
         <DialogTrigger asChild>
             {children || (
             <Button>
@@ -111,35 +127,47 @@ export function CreateUserDialog({ onSuccess, onCancel, children }: CreateUserDi
                     required
                 />
                 </div>
+                
                 <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                    Email
+                <Label htmlFor="alamat" className="text-right">
+                    Alamat
                 </Label>
                 <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
+                    id="alamat"
+                    name="alamat"
+                    value={formData.alamat}
                     onChange={handleInputChange}
                     className="col-span-3"
                     required
                 />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="password" className="text-right">
-                    Password
+                <Label htmlFor="tempatLahir" className="text-right">
+                    Tempat Lahir
                 </Label>
                 <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
+                    id="tempatLahir"
+                    name="tempatLahir"
+                    value={formData.tempatLahir}
                     onChange={handleInputChange}
                     className="col-span-3"
                     required
                 />
                 </div>
-
+                <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="tanggalLahir" className="text-right">
+                    Tanggal Lahir
+                </Label>
+                <Input
+                    id="tanggalLahir"
+                    name="tanggalLahir"
+                    type="date" // Use type="date" for native date picker
+                    value={formData.tanggalLahir}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                    required
+                />
+                </div>
             </div>
             <div className="flex justify-end gap-2">
                 <Button
@@ -161,4 +189,4 @@ export function CreateUserDialog({ onSuccess, onCancel, children }: CreateUserDi
         </DialogContent>
         </Dialog>
     )
-}
+    }

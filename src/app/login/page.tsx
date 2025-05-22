@@ -22,7 +22,7 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="bg-muted relative hidden lg:block">
-          <Image src="https://cdn.pixabay.com/photo/2018/01/22/21/34/sever-3100049_1280.jpg" alt="Image"
+          <Image src="https://cdn.pixabay.com/photo/2018/01/22/21/34/sever-3100049_1280.jpg" alt="Image" width={1280} height={720}
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"></Image>
       </div>
     </div>

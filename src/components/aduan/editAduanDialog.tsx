@@ -95,6 +95,7 @@ import {
         setIsSubmitting(true)
         
         try {
+            console.log(formData)
         const response = await fetch(`/api/aduan/${formData.id}`, {
             method: 'PUT',
             headers: {

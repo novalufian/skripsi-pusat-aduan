@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
     console.log("userSession:", userSession);
 
     // Protected routes
-    const protectedRoutes = ['/dashboard', '/profile', '/data-center', '/user'];
+    const protectedRoutes = ['/dashboard', '/profile', '/data-center', '/user', '/'];
     
     // If user is trying to access protected route without session
     if (protectedRoutes.some(route => pathname.startsWith(route))) {
@@ -34,6 +34,7 @@ export const config = {
         '/dashboard/:path*', 
         '/profile/:path*', 
         '/data-center/:path*',
-        '/user/:path*'
+        '/user/:path*',
+        '/'
     ],
 };
