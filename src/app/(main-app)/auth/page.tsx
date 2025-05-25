@@ -84,7 +84,7 @@ export default function UserTable() {
             accessorKey: 'username',
             header: 'Username',
             cell: ({ row }) => (
-                <div className="capitalize w-[200px] truncate">{row.getValue('username')}</div>
+                <div className=" w-[200px] truncate">{row.getValue('username')}</div>
             ),
             size: 200,
         },

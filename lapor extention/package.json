@@ -1,0 +1,11 @@
+{
+  "name": "skripsi-mama",
+  "version": "1.0.0",
+  "description": "skp naive bayes auto sugest disposisi aplkiasi lapor ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "muizza ainur r",
+  "license": "ISC"
+}

@@ -36,7 +36,7 @@ const data = {
         },
         {
           title: "User",
-          url: "/User",
+          url: "/user",
         },
 
         {
@@ -59,7 +59,6 @@ export function  AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
     console.log("logout")
     Cookies.remove('userSession')
 
-
     router.push("/login")
 
   }
@@ -79,14 +78,14 @@ export function  AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
             <SidebarGroupContent>
               <SidebarMenu>
                 {item.items.map((item) => (
-                  item.title !=='logout' ?
+                  item.title.toLowerCase() !=='logout' ?
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={item.isActive}>
                       <a href={item.url}>{item.title}</a>
                     </SidebarMenuButton>
                   </SidebarMenuItem> : 
                   <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={item.isActive}>
+                  <SidebarMenuButton asChild >
                     <button className="text-left text-red-500 hover:text-red-500 hover:bg-red-100" onClick={handleLogout}>logout</button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

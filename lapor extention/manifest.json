@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Auto Sugest Disposisi",
+  "version": "1.0",
+  "description": "Chrome Extension untuk menginjeksi skrip ke halaman web.",
+  "permissions": [
+    "activeTab",          // Izin untuk berinteraksi dengan tab aktif
+    "scripting"           // Izin untuk menjalankan skrip
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["process.png", "datatraining-v2.json"], // Specify the path to your image
+      "matches": ["<all_urls>"]     // Allow access from all URLs
+    }
+  ],
+  "host_permissions": [
+    "<all_urls>"          // Izin untuk semua URL (bisa dibatasi ke domain tertentu)
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"], // or specific site like "https://yourdomain.com/*"
+      "js": ["content.js"],       // <--- your file
+      "run_at": "document_idle"   // run automatically when page fully loaded
+    }
+  ],
+  "action": {
+    "default_title": "Inject Script",
+    "default_icon": {
+      "16": "sun.png",
+      "48": "sun.png",
+      "128": "sun.png"
+    }
+  },
+  "icons": {
+    "16": "sun.png",
+    "48": "sun.png",
+    "128": "sun.png"
+  }
+}

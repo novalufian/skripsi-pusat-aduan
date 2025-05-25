@@ -31,6 +31,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Error fetching user data.' }, { status: 500 });
         }
 
+        console.log("create coockie")
+
         // 4. Set cookie
         const cookieValue = serialize('userSession', String(JSON.stringify(userData)), {
             secure: process.env.NODE_ENV === 'production',
