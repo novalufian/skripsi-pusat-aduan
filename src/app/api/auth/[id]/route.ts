@@ -54,19 +54,28 @@ export async function PUT(
     request: Request, { params }: { params: Promise<{ id: string }> } // Corrected type definition
 
 ) {
-    const id = (await params).id;
-    const { email, password, userId } = await request.json();
+    try {
+        const id = (await params).id;
+        const { username, password, userId } = await request.json();
 
-    const user = await prisma.login.update({
-        where: {
-            id: Number(id),
-        },
-        data: {
-            username: email,
-            userId: userId,
-            password: password,
-        },
-    });
+        const user = await prisma.login.update({
+            where: {
+                id: Number(id),
+            },
+            data: {
+                username: username,
+                userId: Number(userId),
+                password: password,
+            },
+        });
 
-    return NextResponse.json({ message : 'data login berhasil diubah', user }, { status: 200 });
+        return NextResponse.json(user)
+    } catch (error : unknown) {
+        console.error('Error updating user:', error)
+        return NextResponse.json(
+        { error: error  },
+        { status: 500 }
+        )
+    }
 }
+    

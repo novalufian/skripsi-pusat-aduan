@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import {
     Select,
@@ -58,56 +58,78 @@ export function EditDialog({ loginId, onSuccess, onCancel, children }: EditDialo
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
+    const initialized = useRef(false);
+
     // Note: All API calls and state management now use userId instead of loginId
     useEffect(() => {
+        let isMounted = true; // Track if component is still mounted
+    
         const fetchData = async () => {
+            if (open && !initialized.current) {
+                // Initial data loading logic
+                initialized.current = true;
+            } else if (!open) {
+                initialized.current = false;
+            }
+
             if (!open) {
-                setUserOptions([])
-                setError(null)
-                return
+                if (isMounted) {
+                    setUserOptions([]);
+                    setError(null);
+                }
+                return;
             }
-
-            setIsLoading(true)
-            setError(null)
-
+    
+            setIsLoading(true);
+            setError(null);
+    
             try {
-                // Fetch both user data and options in parallel
                 const [authResponse, usersResponse] = await Promise.all([
-                    fetch(`/api/auth/${loginId}`),  // Using userId in API endpoint
+                    fetch(`/api/auth/${loginId}`),
                     fetch('/api/users')
-                ])
-
-                if (!authResponse.ok) throw new Error('Failed to fetch user data')
-                const authUser: AuthUser = await authResponse.json()
-
-                if (!usersResponse.ok) throw new Error('Failed to fetch user options')
-                const users: User[] = await usersResponse.json()
-
-                // Set both states together to maintain consistency
-                setUserOptions(users.map(user => ({
-                    value: user.id,
-                    label: user.nama,
-                })))
-
-                setFormData({
-                    username: authUser.username,
-                    password: '', // Never pre-fill password for security
-                    userId: authUser.userId,  // Using userId here
-                })
-
-                console.log(authUser, formData)
-
+                ]);
+    
+                // Early return if unmounted
+                if (!isMounted) return;
+    
+                if (!authResponse.ok) throw new Error('Failed to fetch user data');
+                const authUser: AuthUser = await authResponse.json();
+    
+                if (!usersResponse.ok) throw new Error('Failed to fetch user options');
+                const users: User[] = await usersResponse.json();
+    
+                // Only update state if still mounted
+                if (isMounted) {
+                    setUserOptions(users.map(user => ({
+                        value: user.id,
+                        label: user.nama,
+                    })));
+    
+                    console.log(authUser, formData);
+                    setFormData({
+                        username: authUser.username,
+                        password: '',
+                        userId: authUser.userId.toString(),
+                    });
+                }
+    
             } catch (err) {
-                console.error('Error fetching data:', err)
-                setError(err instanceof Error ? err.message : 'Failed to load data')
-                toast.error('Failed to load user data')
+                if (isMounted) {
+                    console.error('Error fetching data:', err);
+                    setError(err instanceof Error ? err.message : 'Failed to load data');
+                    toast.error('Failed to load user data');
+                }
             } finally {
-                setIsLoading(false)
+                if (isMounted) setIsLoading(false);
             }
-        }
-
-        fetchData()
-    }, [open, loginId])  // Using userId in dependency array
+        };
+    
+        fetchData();
+    
+        return () => {
+            isMounted = false; // Cleanup function
+        };
+    }, [open, loginId]); // Keep loginId in dependencies if it can change // Using userId in dependency array
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -118,6 +140,8 @@ export function EditDialog({ loginId, onSuccess, onCancel, children }: EditDialo
     }
 
     const handleUserSelectChange = (value: string) => {
+        console.log(!initialized.current)
+        // if (!initialized.current) return;
         setFormData(prev => ({
             ...prev,
             userId: value,  // Using userId here
@@ -125,19 +149,16 @@ export function EditDialog({ loginId, onSuccess, onCancel, children }: EditDialo
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission
-
-        console.log('Submit triggered with data:', formData); // Debug log
-
+        e.preventDefault();
+    
         if (!formData.username || !formData.userId) {
             toast.error('Username and User ID are required');
             return;
         }
-
+    
         setIsSubmitting(true);
-
+    
         try {
-            console.log('Making API call...'); // Debug log
             const response = await fetch(`/api/auth/${loginId}`, {
                 method: 'PUT',
                 headers: {
@@ -149,17 +170,27 @@ export function EditDialog({ loginId, onSuccess, onCancel, children }: EditDialo
                     userId: formData.userId,
                 }),
             });
-
-            const data = await response.json();
-            console.log('API response:', data); // Debug log
-
+    
+            // First check if response is OK
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to update user');
+                // Try to parse error response, but handle case where it might not be JSON
+                let errorMessage = 'Failed to update user';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                } catch (parseError) {
+                    console.error('Failed to parse error response:', parseError);
+                }
+                throw new Error(errorMessage);
             }
-
+    
+            // Only try to parse JSON if response is OK
+            const data = await response.json();
+            console.log('API response:', data);
+    
             toast.success('User updated successfully');
             setOpen(false);
-            onSuccess(); // Call success callback
+            onSuccess();
         } catch (error) {
             console.error('Error updating user:', error);
             toast.error(
@@ -177,18 +208,30 @@ export function EditDialog({ loginId, onSuccess, onCancel, children }: EditDialo
         onCancel?.()
     }
 
+    useEffect(() => {
+        console.log("FormData updated:", formData);
+    }, [formData]);
+    
+    useEffect(() => {
+        console.log("UserOptions updated:", userOptions);
+    }, [userOptions]);
+
     const getSelectPlaceholder = () => {
         if (isLoading) return "Loading data..."
         if (error) return error
-
-        if (formData.userId) {
+    
+        // Wait until userOptions are loaded before trying to find the selected user
+        if (formData.userId && userOptions.length > 0) {
             const selectedUser = userOptions.find(user => user.value === formData.userId)
-            if (userOptions.length > 0 && !selectedUser) {
+            if (!selectedUser) {
                 return "User not found"
             }
-            return selectedUser ? selectedUser.label : "Loading options..."
+            console.log("SELECT ",selectedUser.label)
+            return selectedUser.label
         }
-        return "Select User ID"  // Using User ID instead of Login ID
+        
+        // Default placeholder
+        return "Select User ID"
     }
 
     return (
@@ -236,37 +279,39 @@ export function EditDialog({ loginId, onSuccess, onCancel, children }: EditDialo
                             />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="userId" className="text-right">  {/* Using userId */}
-                                User ID  {/* Using User ID */}
+                            <Label htmlFor="userId" className="text-right">
+                                User ID
                             </Label>
-                            <Select
+                            <select
+                                id="userId"
                                 value={formData.userId}
-                                onValueChange={handleUserSelectChange}
+                                onChange={(e) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    userId: e.target.value
+                                }));
+                                }}
                                 disabled={isSubmitting || isLoading || !!error}
                                 required
+                                className="col-span-3 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                                <SelectTrigger id="userId" className="col-span-3">  {/* Using userId */}
-                                    <SelectValue placeholder={getSelectPlaceholder()} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {userOptions.length > 0 ? (
-                                        userOptions.map(user => (
-                                            <SelectItem key={user.value} value={user.value}>
-                                                {user.label}
-                                            </SelectItem>
-                                        ))
-                                    ) : (
-                                        <SelectItem value="loading" disabled>
-                                            {isLoading ? "Loading..." : "No options available"}
-                                        </SelectItem>
-                                    )}
-                                </SelectContent>
-                            </Select>
-                            {error && (
-                                <p className="col-span-4 text-right text-sm text-red-500">
-                                    {error}
-                                </p>
-                            )}
+                                {isLoading ? (
+                                <option value="">Loading data...</option>
+                                ) : error ? (
+                                <option value="">{error}</option>
+                                ) : userOptions.length > 0 ? (
+                                <>
+                                    <option value="">Select User ID</option>
+                                    {userOptions.map(user => (
+                                    <option key={user.value} value={user.value}>
+                                        {user.label}
+                                    </option>
+                                    ))}
+                                </>
+                                ) : (
+                                <option value="">No options available</option>
+                                )}
+                            </select>
                         </div>
                     </div>
                     <div className="flex justify-end gap-2">
